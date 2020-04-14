@@ -23,11 +23,14 @@ module.exports = class {
    * @param {string} projectRoot
    * @param {string} preferredRevision
    * @param {boolean} isPuppeteerCore
+   * @param {string} productName
    */
-  constructor(projectRoot, preferredRevision, isPuppeteerCore) {
+  constructor(projectRoot, preferredRevision, isPuppeteerCore, productName) {
     this._projectRoot = projectRoot;
     this._preferredRevision = preferredRevision;
     this._isPuppeteerCore = isPuppeteerCore;
+    // track changes to Launcher configuration via options or environment variables
+    this.__productName = productName;
   }
 
   /**
@@ -35,16 +38,35 @@ module.exports = class {
    * @return {!Promise<!Puppeteer.Browser>}
    */
   launch(options = {}) {
-    this._productName = options.product;
+    if (options.product)
+      this._productName = options.product;
     return this._launcher.launch(options);
   }
 
   /**
-   * @param {!(Launcher.BrowserOptions & {browserWSEndpoint?: string, browserURL?: string, transport?: !Puppeteer.ConnectionTransport})} options
+   * @param {!(Launcher.BrowserOptions & {browserWSEndpoint?: string, browserURL?: string, transport?: !Puppeteer.ConnectionTransport}) & {product?: string}=} options
    * @return {!Promise<!Puppeteer.Browser>}
    */
   connect(options) {
+    if (options.product)
+      this._productName = options.product;
     return this._launcher.connect(options);
+  }
+
+  /**
+   * @param {string} name
+   */
+  set _productName(name) {
+    if (this.__productName !== name)
+      this._changedProduct = true;
+    this.__productName = name;
+  }
+
+  /**
+   * @return {string}
+   */
+  get _productName() {
+    return this.__productName;
   }
 
   /**
@@ -58,7 +80,7 @@ module.exports = class {
    * @return {!Puppeteer.ProductLauncher}
    */
   get _launcher() {
-    if (!this._lazyLauncher || this._lazyLauncher.product !== this._productName) {
+    if (!this._lazyLauncher || this._lazyLauncher.product !== this._productName || this._changedProduct) {
       // @ts-ignore
       const packageJson = require('../package.json');
       switch (this._productName) {
@@ -69,6 +91,7 @@ module.exports = class {
         default:
           this._preferredRevision = packageJson.puppeteer.chromium_revision;
       }
+      this._changedProduct = false;
       this._lazyLauncher = Launcher(this._projectRoot, this._preferredRevision, this._isPuppeteerCore, this._productName);
     }
     return this._lazyLauncher;

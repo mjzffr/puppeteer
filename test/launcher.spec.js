@@ -268,6 +268,20 @@ describe('Launcher specs', function() {
         else if (isFirefox)
           expect(puppeteer.product).toBe('firefox');
       });
+      it('should be able to launch different products', async() => {
+        const {puppeteer} = getTestState();
+
+        const products = ['firefox', 'chrome'];
+        for (const product of products) {
+          const browser = await puppeteer.launch({product});
+          const userAgent = await browser.userAgent();
+          await browser.close();
+          if (product === 'chrome')
+            expect(userAgent).toContain('Chrome');
+          else
+            expect(userAgent).toContain('Firefox');
+        }
+      });
       itFailsFirefox('should work with no default arguments', async() => {
         const {defaultBrowserOptions, puppeteer} = getTestState();
         const options = Object.assign({}, defaultBrowserOptions);
