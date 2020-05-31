@@ -51,17 +51,32 @@ exports.getTestState = () => state;
 const product =
   process.env.PRODUCT || process.env.PUPPETEER_PRODUCT || 'Chromium';
 
+const alternativeInstall = process.env.PUPPETEER_ALT_INSTALL || false;
+
 const isHeadless =
   (process.env.HEADLESS || 'true').trim().toLowerCase() === 'true';
 const isFirefox = product === 'firefox';
 const isChrome = product === 'Chromium';
-const defaultBrowserOptions = {
-  handleSIGINT: false,
-  executablePath: process.env.BINARY,
-  slowMo: false,
-  headless: isHeadless,
-  dumpio: !!process.env.DUMPIO,
-};
+
+let extraLaunchOptions = {};
+try {
+  extraLaunchOptions = JSON.parse(process.env.EXTRA_LAUNCH_OPTIONS || '{}');
+} catch (error) {
+  console.warn(
+    `Error parsing EXTRA_LAUNCH_OPTIONS: ${error.message}. Skipping.`
+  );
+}
+
+const defaultBrowserOptions = Object.assign(
+  {
+    handleSIGINT: false,
+    executablePath: process.env.BINARY,
+    slowMo: false,
+    headless: isHeadless,
+    dumpio: !!process.env.DUMPIO,
+  },
+  extraLaunchOptions
+);
 
 (async () => {
   if (defaultBrowserOptions.executablePath) {
@@ -95,6 +110,16 @@ global.itFailsFirefox = (...args) => {
   else return it(...args);
 };
 
+global.itChromeOnly = (...args) => {
+  if (isChrome) return it(...args);
+  else return xit(...args);
+};
+
+global.itOnlyRegularInstall = (...args) => {
+  if (alternativeInstall || process.env.BINARY) return xit(...args);
+  else return it(...args);
+};
+
 global.itFailsWindowsUntilDate = (date, ...args) => {
   if (os.platform() === 'win32' && Date.now() < date) {
     // we are within the deferred time so skip the test
@@ -118,7 +143,10 @@ if (process.env.COVERAGE) trackCoverage();
 console.log(
   `Running unit tests with:
   -> product: ${product}
-  -> binary: ${path.relative(process.cwd(), puppeteer.executablePath())}`
+  -> binary: ${
+    defaultBrowserOptions.executablePath ||
+    path.relative(process.cwd(), puppeteer.executablePath())
+  }`
 );
 
 exports.setupTestBrowserHooks = () => {
