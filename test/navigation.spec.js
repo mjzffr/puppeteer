@@ -56,15 +56,12 @@ describe('navigation', function () {
       const response = await page.goto('about:blank');
       expect(response).toBe(null);
     });
-    itFailsFirefox(
-      'should return response when page changes its URL after load',
-      async () => {
-        const { page, server } = getTestState();
+    it('should return response when page changes its URL after load', async () => {
+      const { page, server } = getTestState();
 
-        const response = await page.goto(server.PREFIX + '/historyapi.html');
-        expect(response.status()).toBe(200);
-      }
-    );
+      const response = await page.goto(server.PREFIX + '/historyapi.html');
+      expect(response.status()).toBe(200);
+    });
     it('should work with subframes return 204', async () => {
       const { page, server } = getTestState();
 
@@ -87,34 +84,28 @@ describe('navigation', function () {
       if (isChrome) expect(error.message).toContain('net::ERR_ABORTED');
       else expect(error.message).toContain('NS_BINDING_ABORTED');
     });
-    itFailsFirefox(
-      'should navigate to empty page with domcontentloaded',
-      async () => {
-        const { page, server } = getTestState();
+    it('should navigate to empty page with domcontentloaded', async () => {
+      const { page, server } = getTestState();
 
-        const response = await page.goto(server.EMPTY_PAGE, {
-          waitUntil: 'domcontentloaded',
-        });
-        expect(response.status()).toBe(200);
-      }
-    );
-    itFailsFirefox(
-      'should work when page calls history API in beforeunload',
-      async () => {
-        const { page, server } = getTestState();
+      const response = await page.goto(server.EMPTY_PAGE, {
+        waitUntil: 'domcontentloaded',
+      });
+      expect(response.status()).toBe(200);
+    });
+    it('should work when page calls history API in beforeunload', async () => {
+      const { page, server } = getTestState();
 
-        await page.goto(server.EMPTY_PAGE);
-        await page.evaluate(() => {
-          window.addEventListener(
-            'beforeunload',
-            () => history.replaceState(null, 'initial', window.location.href),
-            false
-          );
-        });
-        const response = await page.goto(server.PREFIX + '/grid.html');
-        expect(response.status()).toBe(200);
-      }
-    );
+      await page.goto(server.EMPTY_PAGE);
+      await page.evaluate(() => {
+        window.addEventListener(
+          'beforeunload',
+          () => history.replaceState(null, 'initial', window.location.href),
+          false
+        );
+      });
+      const response = await page.goto(server.PREFIX + '/grid.html');
+      expect(response.status()).toBe(200);
+    });
     itFailsFirefox(
       'should navigate to empty page with networkidle0',
       async () => {
@@ -146,7 +137,7 @@ describe('navigation', function () {
         expect(error.message).toContain('Cannot navigate to invalid URL');
       else expect(error.message).toContain('Invalid url');
     });
-    itFailsFirefox('should fail when navigating to bad SSL', async () => {
+    it('should fail when navigating to bad SSL', async () => {
       const { page, httpsServer, isChrome } = getTestState();
 
       // Make sure that network events do not emit 'undefined'.
@@ -162,22 +153,19 @@ describe('navigation', function () {
         expect(error.message).toContain('net::ERR_CERT_AUTHORITY_INVALID');
       else expect(error.message).toContain('SSL_ERROR_UNKNOWN');
     });
-    itFailsFirefox(
-      'should fail when navigating to bad SSL after redirects',
-      async () => {
-        const { page, server, httpsServer, isChrome } = getTestState();
+    it('should fail when navigating to bad SSL after redirects', async () => {
+      const { page, server, httpsServer, isChrome } = getTestState();
 
-        server.setRedirect('/redirect/1.html', '/redirect/2.html');
-        server.setRedirect('/redirect/2.html', '/empty.html');
-        let error = null;
-        await page
-          .goto(httpsServer.PREFIX + '/redirect/1.html')
-          .catch((error_) => (error = error_));
-        if (isChrome)
-          expect(error.message).toContain('net::ERR_CERT_AUTHORITY_INVALID');
-        else expect(error.message).toContain('SSL_ERROR_UNKNOWN');
-      }
-    );
+      server.setRedirect('/redirect/1.html', '/redirect/2.html');
+      server.setRedirect('/redirect/2.html', '/empty.html');
+      let error = null;
+      await page
+        .goto(httpsServer.PREFIX + '/redirect/1.html')
+        .catch((error_) => (error = error_));
+      if (isChrome)
+        expect(error.message).toContain('net::ERR_CERT_AUTHORITY_INVALID');
+      else expect(error.message).toContain('SSL_ERROR_UNKNOWN');
+    });
     it('should throw if networkidle is passed as an option', async () => {
       const { page, server } = getTestState();
 
@@ -189,20 +177,17 @@ describe('navigation', function () {
         '"networkidle" option is no longer supported'
       );
     });
-    itFailsFirefox(
-      'should fail when main resources failed to load',
-      async () => {
-        const { page, isChrome } = getTestState();
+    it('should fail when main resources failed to load', async () => {
+      const { page, isChrome } = getTestState();
 
-        let error = null;
-        await page
-          .goto('http://localhost:44123/non-existing-url')
-          .catch((error_) => (error = error_));
-        if (isChrome)
-          expect(error.message).toContain('net::ERR_CONNECTION_REFUSED');
-        else expect(error.message).toContain('NS_ERROR_CONNECTION_REFUSED');
-      }
-    );
+      let error = null;
+      await page
+        .goto('http://localhost:44123/non-existing-url')
+        .catch((error_) => (error = error_));
+      if (isChrome)
+        expect(error.message).toContain('net::ERR_CONNECTION_REFUSED');
+      else expect(error.message).toContain('NS_ERROR_CONNECTION_REFUSED');
+    });
     it('should fail when exceeding maximum navigation timeout', async () => {
       const { page, server, puppeteer } = getTestState();
 
@@ -267,7 +252,7 @@ describe('navigation', function () {
       expect(error).toBe(null);
       expect(loaded).toBe(true);
     });
-    itFailsFirefox('should work when navigating to valid url', async () => {
+    it('should work when navigating to valid url', async () => {
       const { page, server } = getTestState();
 
       const response = await page.goto(server.EMPTY_PAGE);
@@ -279,26 +264,23 @@ describe('navigation', function () {
       const response = await page.goto('data:text/html,hello');
       expect(response.ok()).toBe(true);
     });
-    itFailsFirefox('should work when navigating to 404', async () => {
+    it('should work when navigating to 404', async () => {
       const { page, server } = getTestState();
 
       const response = await page.goto(server.PREFIX + '/not-found');
       expect(response.ok()).toBe(false);
       expect(response.status()).toBe(404);
     });
-    itFailsFirefox(
-      'should return last response in redirect chain',
-      async () => {
-        const { page, server } = getTestState();
+    it('should return last response in redirect chain', async () => {
+      const { page, server } = getTestState();
 
-        server.setRedirect('/redirect/1.html', '/redirect/2.html');
-        server.setRedirect('/redirect/2.html', '/redirect/3.html');
-        server.setRedirect('/redirect/3.html', server.EMPTY_PAGE);
-        const response = await page.goto(server.PREFIX + '/redirect/1.html');
-        expect(response.ok()).toBe(true);
-        expect(response.url()).toBe(server.EMPTY_PAGE);
-      }
-    );
+      server.setRedirect('/redirect/1.html', '/redirect/2.html');
+      server.setRedirect('/redirect/2.html', '/redirect/3.html');
+      server.setRedirect('/redirect/3.html', server.EMPTY_PAGE);
+      const response = await page.goto(server.PREFIX + '/redirect/1.html');
+      expect(response.ok()).toBe(true);
+      expect(response.url()).toBe(server.EMPTY_PAGE);
+    });
     itFailsFirefox(
       'should wait for network idle to succeed navigation',
       async () => {
@@ -384,22 +366,19 @@ describe('navigation', function () {
       process.removeListener('warning', warningHandler);
       expect(warning).toBe(null);
     });
-    itFailsFirefox(
-      'should not leak listeners during bad navigation',
-      async () => {
-        const { page } = getTestState();
+    it('should not leak listeners during bad navigation', async () => {
+      const { page } = getTestState();
 
-        let warning = null;
-        const warningHandler = (w) => (warning = w);
-        process.on('warning', warningHandler);
-        for (let i = 0; i < 20; ++i)
-          await page.goto('asdf').catch((error) => {
-            /* swallow navigation error */
-          });
-        process.removeListener('warning', warningHandler);
-        expect(warning).toBe(null);
-      }
-    );
+      let warning = null;
+      const warningHandler = (w) => (warning = w);
+      process.on('warning', warningHandler);
+      for (let i = 0; i < 20; ++i)
+        await page.goto('asdf').catch((error) => {
+          /* swallow navigation error */
+        });
+      process.removeListener('warning', warningHandler);
+      expect(warning).toBe(null);
+    });
     it('should not leak listeners during navigation of 11 pages', async () => {
       const { context, server } = getTestState();
 
@@ -450,28 +429,25 @@ describe('navigation', function () {
         expect(requests[0].url()).toBe(server.EMPTY_PAGE);
       }
     );
-    itFailsFirefox('should work with self requesting page', async () => {
+    it('should work with self requesting page', async () => {
       const { page, server } = getTestState();
 
       const response = await page.goto(server.PREFIX + '/self-request.html');
       expect(response.status()).toBe(200);
       expect(response.url()).toContain('self-request.html');
     });
-    itFailsFirefox(
-      'should fail when navigating and show the url at the error message',
-      async () => {
-        const { page, httpsServer } = getTestState();
+    it('should fail when navigating and show the url at the error message', async () => {
+      const { page, httpsServer } = getTestState();
 
-        const url = httpsServer.PREFIX + '/redirect/1.html';
-        let error = null;
-        try {
-          await page.goto(url);
-        } catch (error_) {
-          error = error_;
-        }
-        expect(error.message).toContain(url);
+      const url = httpsServer.PREFIX + '/redirect/1.html';
+      let error = null;
+      try {
+        await page.goto(url);
+      } catch (error_) {
+        error = error_;
       }
-    );
+      expect(error.message).toContain(url);
+    });
     itFailsFirefox('should send referer', async () => {
       const { page, server } = getTestState();
 
@@ -627,7 +603,7 @@ describe('navigation', function () {
     );
   });
 
-  describeFailsFirefox('Page.goBack', function () {
+  describe('Page.goBack', function () {
     it('should work', async () => {
       const { page, server } = getTestState();
 
@@ -645,7 +621,7 @@ describe('navigation', function () {
       response = await page.goForward();
       expect(response).toBe(null);
     });
-    it('should work with HistoryAPI', async () => {
+    itFailsFirefox('should work with HistoryAPI', async () => {
       const { page, server } = getTestState();
 
       await page.goto(server.EMPTY_PAGE);
